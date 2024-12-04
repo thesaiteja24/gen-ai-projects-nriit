@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 20px;
+      }
+
+      header .username {
+        font-size: 1.2rem;
+      }
+
+      header .upload-button {
+        background-color: #fff;
+        color: #4caf50;
+        border: none;
+        padding: 10px 15px;
+        font-size: 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+      }
+
+      header .upload-button:hover {
+        background-color: #45a049;
+        color: white;
+      }
+
+      main {
+        padding: 20px;
+        text-align: center;
+      }
+
+      main h1 {
+        font-size: 2rem;
+        margin: 20px 0;
+        color: #333;
+      }
+
+      footer {
+        text-align: center;
+        padding: 10px 0;
+        background-color: #4caf50;
+        color: white;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="username">Welcome, {{ fullname }}!</div>
+      <a href="/upload" class="upload-button">Upload File</a>
+    </header>
+
+    <main>
+      <h1>User Dashboard</h1>
+      <p>
+        Welcome to your dashboard. Click the "Upload File" button above to
+        upload your files.
+      </p>
+    </main>
+
+    <footer>&copy; 2024 Your Application Name</footer>
+  </body>
+</html>
