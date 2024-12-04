@@ -42,3 +42,5 @@ htmlcov/
 
 # Flask session files
 flask_session/
+
+service-account.json
