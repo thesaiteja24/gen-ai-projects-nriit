@@ -4,7 +4,7 @@ from flask_bcrypt import Bcrypt
 import os
 import certifi
 from UploadFile import upload_to_drive
-
+from bson.objectid import ObjectId
 
 app = Flask(__name__)
 
@@ -57,7 +57,20 @@ def login():
 @app.route('/user')
 @login_required
 def user_dashboard():
-    return render_template('user.html', fullname=session['fullname'])
+    try:
+        # Convert session['user_id'] to ObjectId
+        user = mongo.db.students.find_one(
+            {"_id": ObjectId(session['user_id'])})
+        if not user:
+            flash("User not found. Please log in again.", "danger")
+            return redirect(url_for('login'))
+
+        # Safely get 'projects' or default to an empty list
+        projects = user.get('projects', [])
+        return render_template('user.html', fullname=user['fullname'], projects=projects)
+    except Exception as e:
+        flash(f"An error occurred: {str(e)}", "danger")
+        return redirect(url_for('login'))
 
 
 @app.route('/logout')
@@ -68,7 +81,7 @@ def logout():
 
 
 @app.route('/upload', methods=['GET', 'POST'])
-@login_required  # Restrict access to logged-in users
+@login_required  # Ensure only logged-in users can access
 def upload_file():
     if request.method == 'POST':
         if 'file' not in request.files:
@@ -85,13 +98,20 @@ def upload_file():
             # Call the function from UploadFile module
             file_url = upload_to_drive(file)
 
-            flash(f"File uploaded successfully! <a href='{file_url}' target='_blank'>View File</a>", "success")
+            # Save file URL to user's projects in the database
+            mongo.db.students.update_one(
+                {"_id": session['user_id']},
+                {"$push": {"projects": file_url}}
+            )
+
+            flash("File uploaded successfully!", "success")
+            # Redirect back to user page
+            return redirect(url_for('user_dashboard'))
         except Exception as e:
             flash(f"An error occurred: {str(e)}", "danger")
-
-        return redirect('/')
+            return redirect(request.url)
     return render_template("upload.html")
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8080)

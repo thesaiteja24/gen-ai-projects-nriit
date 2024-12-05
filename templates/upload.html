@@ -1,50 +1,135 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Upload File</title>
     <style>
       body {
         font-family: Arial, sans-serif;
-        text-align: center;
-        margin: 20px;
-      }
-      ul {
-        list-style: none;
+        margin: 0;
         padding: 0;
+        background-color: #f4f4f4;
+        text-align: center;
       }
-      li.success {
-        color: green;
+
+      .inner1 {
+        margin: 50px auto;
+        max-width: 600px;
+        background-color: rgb(147, 156, 153);
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       }
-      li.danger {
-        color: red;
+
+      .form-label {
+        font-size: 1.2rem;
+        color: white;
+        margin-bottom: 10px;
+        display: block;
+        text-align: left;
       }
+
+      .form-control {
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      textarea.form-control {
+        resize: none;
+      }
+
       button {
-        margin: 10px;
+        margin-top: 20px;
         padding: 10px 20px;
         background-color: #007bff;
         color: white;
         border: none;
+        border-radius: 5px;
         cursor: pointer;
+        font-size: 1rem;
       }
+
       button:hover {
         background-color: #0056b3;
       }
+
+      .messages {
+        margin-bottom: 20px;
+        padding: 10px;
+        border-radius: 5px;
+      }
+
+      .messages ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .messages li.success {
+        color: green;
+      }
+
+      .messages li.danger {
+        color: red;
+      }
     </style>
   </head>
-  <body>
-    <h1>Upload File to Google Drive</h1>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <ul>
-      {% for category, message in messages %}
-      <li class="{{ category }}">{{ message|safe }}</li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-    {% endwith %}
-    <form action="/upload" method="post" enctype="multipart/form-data">
-      <input type="file" name="file" required />
-      <button type="submit">Upload</button>
-    </form>
+  <body style="overscroll-behavior-x: auto">
+    <div class="inner1">
+      <h1 style="color: white">Upload Your Project</h1>
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div class="messages">
+        <ul>
+          {% for category, message in messages %}
+          <li class="{{ category }}">{{ message|safe }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %} {% endwith %}
+      <form action="/upload" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="projectName" class="form-label"
+            >Name of the Project</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="projectName"
+            name="project_name"
+            placeholder="Enter Project Name"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="projectDescription" class="form-label"
+            >Write Description</label
+          >
+          <textarea
+            class="form-control"
+            id="projectDescription"
+            name="project_description"
+            rows="3"
+            placeholder="Enter Project Description"
+            required
+          ></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Upload Project File</label><br />
+          <input
+            type="file"
+            name="file"
+            id="projectfile"
+            class="form-control"
+            style="margin-top: 10px"
+            required
+          />
+        </div>
+        <button type="submit">Upload Project</button>
+      </form>
+    </div>
   </body>
 </html>
