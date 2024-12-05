@@ -7,16 +7,15 @@ from bson.objectid import ObjectId
 
 app = Flask(__name__)
 
-# Secret key for sessions``
-app.secret_key = 'your_secret_key'
+# Secret key for sessions
+app.secret_key = os.environ.get("SESSION_KEY")
 
 # Update MongoDB URI with correct SSL configuration
-app.config["MONGO_URI"] = "MONGO_API"
+app.config["MONGO_URI"] = os.environ.get('MONGO_URI') + certifi.where()
 
 # Initialize PyMongo
 mongo = PyMongo(app)
 
-# Authentication check decorator
 def login_required(f):
     def wrapper(*args, **kwargs):
         if 'student_id' not in session:  # Check if user is logged in
@@ -170,6 +169,12 @@ def flash_message():
     category = request.args.get('category', 'info')
     flash(msg, category)
     return redirect(request.referrer or url_for('user_dashboard'))
+
+
+@app.route('/')
+def home():
+    # Redirect to the login route
+    return redirect(url_for('login'))
 
 
 if __name__ == '__main__':
