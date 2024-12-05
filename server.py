@@ -79,7 +79,7 @@ def logout():
 
 
 @app.route('/upload', methods=['GET', 'POST'])
-@login_required  # Ensure only logged-in users can access
+@login_required
 def upload_file():
     if request.method == 'POST':
         if 'file' not in request.files:
@@ -100,10 +100,12 @@ def upload_file():
         if not project_name or not project_description:
             flash("Project name and description are required.", "danger")
             return redirect(request.url)
-
         try:
             # Upload the file and get the file URL
             file_url = upload_to_drive(file)
+
+            # Generate a unique ID for the project
+            project_id = ObjectId()
 
             # Update the user's project information in the database
             mongo.db.students.update_one(
@@ -111,6 +113,7 @@ def upload_file():
                 {
                     "$push": {
                         "projects": {
+                            "_id": project_id,  # Add project ID
                             "project_name": project_name,
                             "project_description": project_description,
                             "link": file_url
@@ -120,12 +123,33 @@ def upload_file():
             )
 
             flash("File uploaded and project added successfully!", "success")
-            # Redirect to the user dashboard
             return redirect(url_for('user_dashboard'))
         except Exception as e:
             flash(f"An error occurred: {str(e)}", "danger")
             return redirect(request.url)
     return render_template("upload.html")
+
+
+@app.route('/delete/<project_id>', methods=['POST'])
+@login_required
+def delete_project(project_id):
+    try:
+        # Convert project_id to ObjectId
+        project_id = ObjectId(project_id)
+
+        # Remove the project with the given ID from the user's projects
+        result = mongo.db.students.update_one(
+            {"_id": ObjectId(session['user_id'])},
+            {"$pull": {"projects": {"_id": project_id}}}
+        )
+
+        if result.modified_count > 0:
+            flash("Project deleted successfully.", "success")
+        else:
+            flash("Project not found or already deleted.", "danger")
+    except Exception as e:
+        flash(f"An error occurred: {str(e)}", "danger")
+    return redirect(url_for('user_dashboard'))
 
 
 if __name__ == '__main__':

@@ -17,7 +17,7 @@
       >
         <div class="container-fluid">
           <span id="fullname" class="navbar-brand text-white fs-4"
-            >Welcome, {{ fullname }}</span
+            >Welcome, &nbsp;{{ fullname }}</span
           >
           <a href="/upload" class="btn btn-success">Add File</a>
         </div>
@@ -40,11 +40,19 @@
                 >
                   View Project
                 </button>
-                <button class="btn btn-outline-danger flex-grow-0" style="flex-basis: 20%;">
-                  Delete
-                </button>
+                <form
+                  action="/delete/{{ project._id }}"
+                  method="post"
+                  onsubmit="return confirm('Are you sure you want to delete this project?');"
+                >
+                  <button
+                    class="btn btn-outline-danger flex-grow-0"
+                    style="flex-basis: 20%"
+                  >
+                    Delete
+                  </button>
+                </form>
               </div>
-              
             </div>
           </div>
         </div>
