@@ -30,21 +30,24 @@
           <span id="fullname" class="navbar-brand text-white fs-4"
             >Welcome, &nbsp;{{ fullname }}</span
           >
-          <div>
+          <div class="d-flex justify-content-between flex-wrap my-2">
             <a
               href="{{ url_for('view_user_by_roll', roll_number=session['student_id']) }}"
-              class="btn btn-warning mx-1"
+              class="btn btn-warning flex-fill m-1"
             >
               My Projects
             </a>
             <a
               href="{{ url_for('view_user_by_roll', roll_number=session['student_id']) }}"
               id="view-projects-link"
-              class="btn btn-primary mx-1"
+              class="btn btn-primary flex-fill m-1"
               onclick="copyLinkAndRefresh()"
-              >Copy Link</a
             >
-            <a href="/upload" class="btn btn-success mx-1">Add File</a>
+              Copy Link
+            </a>
+            <a href="/upload" class="btn btn-success flex-fill m-1">
+              Add File
+            </a>
           </div>
         </div>
       </nav>
@@ -96,13 +99,15 @@
     </div>
 
     <!-- Flash Message -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-message alert alert-{{ messages[0][0] }} fade show" role="alert">
-          {{ messages[0][1] }}
-        </div>
-      {% endif %}
-    {% endwith %}
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div
+      class="flash-message alert alert-{{ messages[0][0] }} fade show"
+      role="alert"
+    >
+      {{ messages[0][1] }}
+    </div>
+    {% endif %} {% endwith %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -121,11 +126,11 @@
       }
 
       // Show the flash message
-      const flashMessage = document.querySelector('.flash-message');
+      const flashMessage = document.querySelector(".flash-message");
       if (flashMessage) {
-        flashMessage.style.display = 'block';
+        flashMessage.style.display = "block";
         setTimeout(() => {
-          flashMessage.style.display = 'none';
+          flashMessage.style.display = "none";
         }, 3000); // Hide the flash message after 3 seconds
       }
     </script>

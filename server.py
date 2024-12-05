@@ -16,6 +16,7 @@ app.config["MONGO_URI"] = os.environ.get('MONGO_URI') + certifi.where()
 # Initialize PyMongo
 mongo = PyMongo(app)
 
+
 def login_required(f):
     def wrapper(*args, **kwargs):
         if 'student_id' not in session:  # Check if user is logged in
