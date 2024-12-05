@@ -11,6 +11,58 @@ credentials = Credentials.from_service_account_file(
     SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 drive_service = build('drive', 'v3', credentials=credentials)
 
+def convert_bytes(bytes_val):
+    """
+    Convert bytes to KB, MB, and GB
+    """
+    if not bytes_val:
+        return 0, 0, 0
+    
+    kb = bytes_val / 1024
+    mb = kb / 1024
+    gb = mb / 1024
+    
+    return kb, mb, gb
+
+def check_drive_storage():
+    """
+    Check current Google Drive storage usage in multiple units
+    """
+    about = drive_service.about().get(fields="storageQuota").execute()
+    quota = about.get('storageQuota', {})
+    
+    # Get total storage
+    total_bytes = float(quota.get('limit', 0))
+    total_kb, total_mb, total_gb = convert_bytes(total_bytes)
+    
+    # Get used storage
+    used_bytes = float(quota.get('usage', 0))
+    used_kb, used_mb, used_gb = convert_bytes(used_bytes)
+    
+    # Calculate remaining storage
+    remaining_bytes = total_bytes - used_bytes
+    remaining_kb, remaining_mb, remaining_gb = convert_bytes(remaining_bytes)
+    
+    # Calculate usage percentage
+    usage_percentage = (used_bytes/total_bytes*100) if total_bytes > 0 else 0
+    
+    print("\nDrive Storage Status:")
+    print("\nTotal Storage:")
+    print(f"  {total_kb:.2f} KB")
+    print(f"  {total_mb:.2f} MB")
+    print(f"  {total_gb:.2f} GB")
+    
+    print("\nUsed Storage:")
+    print(f"  {used_kb:.2f} KB")
+    print(f"  {used_mb:.2f} MB")
+    print(f"  {used_gb:.2f} GB")
+    
+    print("\nRemaining Storage:")
+    print(f"  {remaining_kb:.2f} KB")
+    print(f"  {remaining_mb:.2f} MB")
+    print(f"  {remaining_gb:.2f} GB")
+    
+    print(f"\nUsage Percentage: {usage_percentage:.2f}%")
 
 def upload_to_drive(file):
     """
@@ -51,3 +103,7 @@ def upload_to_drive(file):
         return file_url
     except Exception as e:
         raise RuntimeError(f"An error occurred during upload: {str(e)}")
+
+# Check storage when the script runs
+if __name__ == "__main__":
+    check_drive_storage()
