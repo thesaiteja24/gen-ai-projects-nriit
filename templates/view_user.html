@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Projects</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-light">
+    <div class="container my-4">
+      <!-- Navbar with User Name -->
+      <nav class="navbar navbar-light bg-secondary rounded shadow-sm p-3">
+        <div class="container-fluid">
+          <span id="fullname" class="navbar-brand text-white fs-4">
+            {{ fullname }}
+          </span>
+        </div>
+      </nav>
+
+      <!-- Display Projects -->
+      {% if projects and projects|length > 0 %}
+      <div class="row mt-4 g-3">
+        {% for project in projects %}
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title text-dark">{{ project.project_name }}</h5>
+              <p class="card-text text-muted">
+                {{ project.project_description }}
+              </p>
+              <div class="d-flex gap-2">
+                <button
+                  class="btn btn-outline-primary w-100"
+                  onclick="window.location.href='{{ project.link }}'"
+                >
+                  View Project
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <!-- If No Projects -->
+      <div class="text-center my-5">
+        <p class="text-muted">No projects available for this user.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

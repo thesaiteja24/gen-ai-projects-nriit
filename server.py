@@ -152,5 +152,27 @@ def delete_project(project_id):
     return redirect(url_for('user_dashboard'))
 
 
+@app.route('/id/<roll_number>', methods=['GET'])
+def view_user_by_roll(roll_number):
+    # Fetch the user details using the roll number
+    user = mongo.db.students.find_one({"student_id": roll_number})
+    projects = user.get('projects', []) if user else []
+
+    # Render the `view_user.html` template directly
+    return render_template(
+        'view_user.html',
+        fullname=user['fullname'] if user else "Unknown User",
+        projects=projects
+    )
+
+
+@app.route('/flash_message')
+def flash_message():
+    msg = request.args.get('msg', '')
+    category = request.args.get('category', 'info')
+    flash(msg, category)
+    return redirect(request.referrer or url_for('user_dashboard'))
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=8080)
