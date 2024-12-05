@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_pymongo import PyMongo
-from flask_bcrypt import Bcrypt
 import os
 import certifi
 from UploadFile import upload_to_drive
@@ -16,7 +15,6 @@ app.config["MONGO_URI"] = "MONGO_API"
 
 # Initialize PyMongo
 mongo = PyMongo(app)
-bcrypt = Bcrypt(app)
 
 # Authentication check decorator
 
@@ -94,18 +92,35 @@ def upload_file():
             flash("No selected file", "danger")
             return redirect(request.url)
 
+        # Get the project details from the form
+        project_name = request.form.get('project_name', '').strip()
+        project_description = request.form.get(
+            'project_description', '').strip()
+
+        if not project_name or not project_description:
+            flash("Project name and description are required.", "danger")
+            return redirect(request.url)
+
         try:
-            # Call the function from UploadFile module
+            # Upload the file and get the file URL
             file_url = upload_to_drive(file)
 
-            # Save file URL to user's projects in the database
+            # Update the user's project information in the database
             mongo.db.students.update_one(
-                {"_id": session['user_id']},
-                {"$push": {"projects": file_url}}
+                {"_id": ObjectId(session['user_id'])},
+                {
+                    "$push": {
+                        "projects": {
+                            "project_name": project_name,
+                            "project_description": project_description,
+                            "link": file_url
+                        }
+                    }
+                }
             )
 
-            flash("File uploaded successfully!", "success")
-            # Redirect back to user page
+            flash("File uploaded and project added successfully!", "success")
+            # Redirect to the user dashboard
             return redirect(url_for('user_dashboard'))
         except Exception as e:
             flash(f"An error occurred: {str(e)}", "danger")
