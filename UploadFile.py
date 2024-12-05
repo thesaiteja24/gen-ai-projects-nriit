@@ -5,7 +5,7 @@ import os
 
 # Google Drive API Setup
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-SERVICE_ACCOUNT_FILE = '/Users/saiteja/gh repos/host-gen-ai-projects/service-account.json'
+SERVICE_ACCOUNT_FILE = './service-account.json'
 
 credentials = Credentials.from_service_account_file(
     SERVICE_ACCOUNT_FILE, scopes=SCOPES)

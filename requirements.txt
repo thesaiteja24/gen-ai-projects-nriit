@@ -4,6 +4,7 @@ cachetools==5.5.0
 certifi==2024.8.30
 charset-normalizer==3.4.0
 click==8.1.7
+cloudinary==1.41.0
 dnspython==2.7.0
 Flask==3.1.0
 Flask-Bcrypt==1.0.1
@@ -14,12 +15,14 @@ google-auth==2.36.0
 google-auth-httplib2==0.2.0
 google-auth-oauthlib==1.2.1
 googleapis-common-protos==1.66.0
+gunicorn==23.0.0
 httplib2==0.22.0
 idna==3.10
 itsdangerous==2.2.0
 Jinja2==3.1.4
 MarkupSafe==3.0.2
 oauthlib==3.2.2
+packaging==24.2
 proto-plus==1.25.0
 protobuf==5.29.0
 pyasn1==0.6.1
