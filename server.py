@@ -7,7 +7,7 @@ from bson.objectid import ObjectId
 
 app = Flask(__name__)
 
-# Secret key for sessions
+# Secret key for sessions``
 app.secret_key = 'your_secret_key'
 
 # Update MongoDB URI with correct SSL configuration
@@ -17,8 +17,6 @@ app.config["MONGO_URI"] = "MONGO_API"
 mongo = PyMongo(app)
 
 # Authentication check decorator
-
-
 def login_required(f):
     def wrapper(*args, **kwargs):
         if 'student_id' not in session:  # Check if user is logged in
