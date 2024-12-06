@@ -8,6 +8,14 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css"
+      integrity="sha512-5Hs3dF2AEPkpNAR7UiOHba+lRSJNeM2ECkwxUIxC1Q/FLycGTbNapWXB4tP889k5T5Ju8fs4b1P5z/iB4nMfSQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
     <style>
       /* Styling for flash messages */
       .flash-message {
@@ -24,7 +32,7 @@
   <body class="bg-light">
     <div class="container my-4">
       <nav
-        class="navbar navbar-expand-lg navbar-light bg-secondary rounded shadow-sm p-3"
+        class="navbar navbar-expand-lg navbar-light bg-dark rounded shadow-sm p-3"
       >
         <div class="container-fluid">
           <span id="fullname" class="navbar-brand text-white fs-4"
@@ -48,6 +56,11 @@
             <a href="/upload" class="btn btn-success flex-fill m-1">
               Add File
             </a>
+            <i
+              class="fa-solid fa-arrow-right-from-bracket mt-2 mx-3 fs-2"
+              style="color: #fff; cursor: pointer"
+              onclick="handleLogout()"
+            ></i>
           </div>
         </div>
       </nav>
@@ -111,6 +124,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+      function handleLogout() {
+        window.location.href = "/logout";
+      }
       function copyLinkAndRefresh() {
         const link = document.getElementById("view-projects-link").href;
         navigator.clipboard
