@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_pymongo import PyMongo
 import os
 import certifi
-from UploadFile import upload_to_drive
+from UploadFile import upload_to_drive, delete_from_drive
 from bson.objectid import ObjectId
 import magic
 
@@ -93,7 +93,8 @@ def upload_file():
 
         # Get the project details from the form
         project_name = request.form.get('project_name', '').strip()
-        project_description = request.form.get('project_description', '').strip()
+        project_description = request.form.get(
+            'project_description', '').strip()
 
         if not project_name or not project_description:
             flash("Project name and description are required.", "danger")
@@ -161,8 +162,11 @@ def delete_project(project_id):
         file_id = project.get('file_id')
         if file_id:
             try:
-                drive_service.files().delete(fileId=file_id).execute()
-                flash("File deleted from Google Drive.", "success")
+                # Use the delete_from_drive function from UploadFile module
+                if delete_from_drive(file_id):
+                    flash("Project deleted Successfully.", "success")
+                else:
+                    flash("Failed to delete the file from Google Drive.", "danger")
             except Exception as e:
                 flash(
                     f"Failed to delete file from Google Drive: {str(e)}", "danger")
