@@ -15,7 +15,6 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-
     <style>
       /* Styling for flash messages */
       .flash-message {
@@ -27,6 +26,10 @@
         border-radius: 5px;
         display: none;
       }
+      .logout-icon {
+        color: #fff;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body class="bg-light">
@@ -35,9 +38,9 @@
         class="navbar navbar-expand-lg navbar-light bg-dark rounded shadow-sm p-3"
       >
         <div class="container-fluid">
-          <span id="fullname" class="navbar-brand text-white fs-4"
-            >Welcome, &nbsp;{{ fullname }}</span
-          >
+          <span id="fullname" class="navbar-brand text-white fs-4">
+            Welcome, {{ fullname }}
+          </span>
           <div class="d-flex justify-content-between flex-wrap my-2">
             <a
               href="{{ url_for('view_user_by_roll', roll_number=session['student_id']) }}"
@@ -45,20 +48,20 @@
             >
               My Projects
             </a>
-            <a
-              href="{{ url_for('view_user_by_roll', roll_number=session['student_id']) }}"
-              id="view-projects-link"
+            <button
               class="btn btn-primary flex-fill m-1"
-              onclick="copyLinkAndRefresh()"
+              id="copy-link-btn"
+              data-link="{{ url_for('view_user_by_roll', roll_number=session['student_id']) }}"
             >
               Copy Link
-            </a>
+            </button>
             <a href="/upload" class="btn btn-success flex-fill m-1">
               Add File
             </a>
             <i
-              class="fa-solid fa-arrow-right-from-bracket mt-2 mx-3 fs-2"
-              style="color: #fff; cursor: pointer"
+              class="fa-solid fa-arrow-right-from-bracket mt-2 mx-3 fs-2 logout-icon"
+              role="button"
+              aria-label="Logout"
               onclick="handleLogout()"
             ></i>
           </div>
@@ -76,12 +79,13 @@
                 {{ project.project_description }}
               </p>
               <div class="d-flex gap-2">
-                <button
+                <a
+                  href="{{ project.link }}"
+                  target="_blank"
                   class="btn btn-outline-primary flex-grow-1"
-                  onclick="window.location.href='{{ project.link }}'"
                 >
                   View Project
-                </button>
+                </a>
                 <form
                   action="/delete/{{ project._id }}"
                   method="post"
@@ -104,14 +108,14 @@
       <div class="text-center my-5">
         <h1 class="text-dark">User Dashboard</h1>
         <p class="text-muted">
-          Welcome to your dashboard. Click the "Upload File" button above to
-          upload your files.
+          Welcome to your dashboard. Click the "Add File" button above to upload
+          your files.
         </p>
       </div>
       {% endif %}
     </div>
 
-    <!-- Flash Message -->
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %} {% if
     messages %}
     <div
@@ -127,27 +131,28 @@
       function handleLogout() {
         window.location.href = "/logout";
       }
-      function copyLinkAndRefresh() {
-        const link = document.getElementById("view-projects-link").href;
-        navigator.clipboard
-          .writeText(link)
-          .then(() => {
-            window.location.href =
-              "/flash_message?msg=Link+copied+to+clipboard!&category=success";
-          })
-          .catch((err) => {
-            window.location.href =
-              "/flash_message?msg=Failed+to+copy+link.&category=danger";
-          });
-      }
 
-      // Show the flash message
+      document
+        .getElementById("copy-link-btn")
+        ?.addEventListener("click", (e) => {
+          const link = e.target.getAttribute("data-link");
+          navigator.clipboard
+            .writeText(link)
+            .then(() => {
+              alert("Link copied to clipboard!");
+            })
+            .catch(() => {
+              alert("Failed to copy the link.");
+            });
+        });
+
+      // Show flash messages
       const flashMessage = document.querySelector(".flash-message");
       if (flashMessage) {
         flashMessage.style.display = "block";
         setTimeout(() => {
           flashMessage.style.display = "none";
-        }, 3000); // Hide the flash message after 3 seconds
+        }, 3000);
       }
     </script>
   </body>

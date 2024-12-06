@@ -45,3 +45,4 @@ htmlcov/
 flask_session/
 
 service-account.json
+data.csv

@@ -5,182 +5,217 @@ import certifi
 from UploadFile import upload_to_drive, delete_from_drive
 from bson.objectid import ObjectId
 import magic
+import bcrypt
 
 app = Flask(__name__)
 
-# Secret key for sessions
-app.secret_key = os.environ.get("SESSION_KEY")
+# Secret key for session management
+app.secret_key = os.environ.get("SESSION_KEY", "default_secret_key")
 
-# Update MongoDB URI with correct SSL configuration
-app.config["MONGO_URI"] = os.environ.get('MONGO_URI') + certifi.where()
-app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
-# Initialize PyMongo
+# MongoDB Configuration
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI") + certifi.where()
+app.config["MAX_CONTENT_LENGTH"] = 3 * 1024 * 1024  # Limit upload size to 3MB
+
+# Initialize MongoDB connection
 mongo = PyMongo(app)
 
 
+# ----------------------------- Utility Functions ---------------------------- #
+
 def login_required(f):
+    """
+    Decorator to restrict access to authenticated users.
+    Redirects to login if the user is not logged in.
+    """
     def wrapper(*args, **kwargs):
-        if 'student_id' not in session:  # Check if user is logged in
+        if 'student_id' not in session:
             flash("You need to log in to access this page.", "warning")
             return redirect(url_for('login'))
         return f(*args, **kwargs)
-    wrapper.__name__ = f.__name__  # Preserve the function name
+    wrapper.__name__ = f.__name__  # Preserve original function name
     return wrapper
 
 
-@app.route('/<path:path>')
-def fallback(path):
-    return render_template('page-not-found.html')
+def get_user_projects():
+    """
+    Fetch the currently logged-in user's projects.
+    Returns the user document and projects list.
+    """
+    user = mongo.db.students.find_one({"_id": ObjectId(session['user_id'])})
+    if not user:
+        flash("User not found. Please log in again.", "danger")
+        return None, []
+    return user, user.get("projects", [])
 
 
-@app.route('/login', methods=['POST', 'GET'])
+# ----------------------------- Error Handlers ----------------------------- #
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    """
+    Handles file size limit errors (413).
+    """
+    flash("File size exceeds 3MB limit.", "danger")
+    return redirect(request.referrer or url_for('upload_file')), 413
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    """
+    Handles 404 errors and displays a custom page.
+    """
+    return render_template('page-not-found.html'), 404
+
+
+# ------------------------------- Routes ----------------------------------- #
+
+@app.route('/')
+def home():
+    """
+    Redirects to the login page.
+    """
+    return redirect(url_for('login'))
+
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    Handles user login functionality.
+    If session exists, redirect the user to the dashboard automatically.
+    """
+    # Check if the user is already logged in
+    if 'student_id' in session:
+        flash("You are already logged in.", "info")
+        return redirect(url_for('user_dashboard'))
+
     if request.method == 'POST':
-        student_id = request.form['student_id']
-        password = request.form['password']
+        student_id = request.form.get('student_id')
+        password = request.form.get('password')
+
+        # Verify user credentials
         user = mongo.db.students.find_one({"student_id": student_id})
-        if user and user['password'] == password:
+        if user and bcrypt.checkpw(password.encode('utf-8'), user.get("password").encode('utf-8')):
             session['user_id'] = str(user['_id'])
             session['student_id'] = student_id
             session['fullname'] = user.get('fullname', 'User')
-            # Redirect to user dashboard
+            flash("Login successful!", "success")
             return redirect(url_for('user_dashboard'))
         else:
-            flash("Invalid username or password", "danger")
-            return redirect(url_for('login'))
+            flash("Invalid username or password.", "danger")
+
     return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    """
+    Logs the user out and clears the session.
+    """
+    session.clear()
+    flash("You have been logged out.", "info")
+    return redirect(url_for('login'))
 
 
 @app.route('/user')
 @login_required
 def user_dashboard():
+    """
+    Displays the user dashboard with their projects.
+    """
     try:
-        # Convert session['user_id'] to ObjectId
-        user = mongo.db.students.find_one(
-            {"_id": ObjectId(session['user_id'])})
+        user, projects = get_user_projects()
         if not user:
-            flash("User not found. Please log in again.", "danger")
             return redirect(url_for('login'))
 
-        # Safely get 'projects' or default to an empty list
-        projects = user.get('projects', [])
         return render_template('user.html', fullname=user['fullname'], projects=projects)
     except Exception as e:
         flash(f"An error occurred: {str(e)}", "danger")
         return redirect(url_for('login'))
 
 
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash("You have been logged out.", "info")
-    return redirect(url_for('login'))
-
-
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload_file():
+    """
+    Handles file uploads and associates them with user projects.
+    """
     if request.method == 'POST':
-        if 'file' not in request.files:
-            flash("No file part", "danger")
-            return redirect(request.url)
-
-        file = request.files['file']
-
-        if file.filename == '':
-            flash("No selected file", "danger")
-            return redirect(request.url)
-
-        # Get the project details from the form
+        file = request.files.get('file')
         project_name = request.form.get('project_name', '').strip()
         project_description = request.form.get(
             'project_description', '').strip()
+
+        if not file or file.filename == '':
+            flash("No file selected.", "danger")
+            return redirect(request.url)
 
         if not project_name or not project_description:
             flash("Project name and description are required.", "danger")
             return redirect(request.url)
 
         try:
-            # Server-side file type validation using MIME type
+            # Validate file type (must be PDF)
             mime = magic.Magic(mime=True)
-            file_mime_type = mime.from_buffer(file.stream.read(2048))
-            file.stream.seek(0)  # Reset file pointer after reading
+            file_mime_type = mime.from_buffer(file.read(2048))
+            file.seek(0)  # Reset file pointer
 
             if file_mime_type != "application/pdf":
-                flash(
-                    "Only PDF files are allowed. Please upload a valid file.", "danger")
+                flash("Only PDF files are allowed.", "danger")
                 return redirect(request.url)
 
-            # Upload the file and get the file URL and file ID
+            # Upload file and save project details
             file_url, file_id = upload_to_drive(file)
-
-            # Generate a unique ID for the project
             project_id = ObjectId()
-
-            # Update the user's project information in the database
             mongo.db.students.update_one(
                 {"_id": ObjectId(session['user_id'])},
-                {
-                    "$push": {
-                        "projects": {
-                            "_id": project_id,  # Add project ID
-                            "project_name": project_name,
-                            "project_description": project_description,
-                            "link": file_url,      # Direct link field
-                            "file_id": file_id     # Direct file_id field
-                        }
+                {"$push": {
+                    "projects": {
+                        "_id": project_id,
+                        "project_name": project_name,
+                        "project_description": project_description,
+                        "link": file_url,
+                        "file_id": file_id
                     }
-                }
+                }}
             )
-
-            flash("File uploaded and project added successfully!", "success")
+            flash("File uploaded successfully!", "success")
             return redirect(url_for('user_dashboard'))
+
         except Exception as e:
             flash(f"An error occurred: {str(e)}", "danger")
             return redirect(request.url)
-    return render_template("upload.html")
+
+    return render_template('upload.html')
 
 
 @app.route('/delete/<project_id>', methods=['POST'])
 @login_required
 def delete_project(project_id):
+    """
+    Deletes a user project and its associated file.
+    """
     try:
-        # Convert project_id to ObjectId
-        project_id = ObjectId(project_id)
+        user, projects = get_user_projects()
+        if not user:
+            return redirect(url_for('login'))
 
-        # Find the project to get the file_id
-        user = mongo.db.students.find_one(
-            {"_id": ObjectId(session['user_id'])})
-        project = next((p for p in user.get('projects', [])
-                       if p['_id'] == project_id), None)
-
+        project = next(
+            (p for p in projects if str(p["_id"]) == project_id), None)
         if not project:
-            flash("Project not found or already deleted.", "danger")
+            flash("Project not found.", "danger")
             return redirect(url_for('user_dashboard'))
 
-        # Delete the file from Google Drive
+        # Delete file from Google Drive
         file_id = project.get('file_id')
         if file_id:
-            try:
-                # Use the delete_from_drive function from UploadFile module
-                if delete_from_drive(file_id):
-                    flash("Project deleted Successfully.", "success")
-                else:
-                    flash("Failed to delete the file from Google Drive.", "danger")
-            except Exception as e:
-                flash(
-                    f"Failed to delete file from Google Drive: {str(e)}", "danger")
+            delete_from_drive(file_id)
 
-        # Remove the project from the user's projects
-        result = mongo.db.students.update_one(
+        # Remove project from database
+        mongo.db.students.update_one(
             {"_id": ObjectId(session['user_id'])},
-            {"$pull": {"projects": {"_id": project_id}}}
+            {"$pull": {"projects": {"_id": ObjectId(project_id)}}}
         )
-
-        if result.modified_count > 0:
-            flash("Project deleted successfully.", "success")
-        else:
-            flash("Project not found or already deleted.", "danger")
+        flash("Project deleted successfully.", "success")
     except Exception as e:
         flash(f"An error occurred: {str(e)}", "danger")
     return redirect(url_for('user_dashboard'))
@@ -188,11 +223,11 @@ def delete_project(project_id):
 
 @app.route('/id/<roll_number>', methods=['GET'])
 def view_user_by_roll(roll_number):
-    # Fetch the user details using the roll number
+    """
+    Displays user details by their roll number.
+    """
     user = mongo.db.students.find_one({"student_id": roll_number})
     projects = user.get('projects', []) if user else []
-
-    # Render the `view_user.html` template directly
     return render_template(
         'view_user.html',
         fullname=user['fullname'] if user else "Unknown User",
@@ -202,23 +237,16 @@ def view_user_by_roll(roll_number):
 
 @app.route('/flash_message')
 def flash_message():
+    """
+    Handles flash messages and redirects.
+    """
     msg = request.args.get('msg', '')
     category = request.args.get('category', 'info')
     flash(msg, category)
     return redirect(request.referrer or url_for('user_dashboard'))
 
 
-@app.errorhandler(413)
-def request_entity_too_large(error):
-    flash("File size exceeds 3MB limit.", "danger")
-    return redirect(request.referrer or url_for('upload_file')), 413
-
-
-@app.route('/')
-def home():
-    # Redirect to the login route
-    return redirect(url_for('login'))
-
+# ------------------------------- Main Entry -------------------------------- #
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
