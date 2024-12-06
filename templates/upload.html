@@ -9,6 +9,12 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <style>
+      .disabled-btn {
+        pointer-events: none;
+        opacity: 0.65;
+      }
+    </style>
   </head>
   <body class="bg-light">
     <div class="container my-5">
@@ -30,7 +36,13 @@
           {% endwith %}
 
           <!-- Form -->
-          <form action="/upload" method="post" enctype="multipart/form-data" class="mt-4">
+          <form
+            action="/upload"
+            method="post"
+            enctype="multipart/form-data"
+            class="mt-4"
+            onsubmit="return validateForm()"
+          >
             <div class="mb-3">
               <label for="projectName" class="form-label">Name of the Project</label>
               <input
@@ -60,10 +72,16 @@
                 class="form-control"
                 id="projectfile"
                 name="file"
+                accept=".pdf"
                 required
               />
+              <small class="text-warning">
+                Maximum file size allowed: <span id="maxFileSizeDisplay">3MB</span>. Only PDF files are allowed.
+              </small>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Upload Project</button>
+            <button type="submit" id="submitButton" class="btn btn-primary w-100">
+              Upload Project
+            </button>
           </form>
         </div>
       </div>
@@ -71,5 +89,50 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const maxFileSize = 3 * 1024 * 1024; // 3MB in bytes
+
+      function formatBytes(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      document.getElementById("maxFileSizeDisplay").innerText = formatBytes(maxFileSize);
+
+      function validateForm() {
+        const fileInput = document.getElementById("projectfile");
+        const submitButton = document.getElementById("submitButton");
+
+        if (fileInput.files.length === 0) {
+          alert("Please select a file to upload.");
+          return false;
+        }
+
+        const file = fileInput.files[0];
+
+        // Check file size
+        if (file.size > maxFileSize) {
+          alert(
+            `File size exceeds the allowed limit of ${formatBytes(maxFileSize)}. Please select a smaller file.`
+          );
+          return false;
+        }
+
+        // Check file type
+        const allowedType = "application/pdf";
+        if (file.type !== allowedType) {
+          alert("Only PDF files are allowed. Please select a valid file.");
+          return false;
+        }
+
+        // Disable the button to prevent multiple submissions
+        submitButton.classList.add("disabled-btn");
+        submitButton.innerText = "Uploading...";
+        return true;
+      }
+    </script>
   </body>
 </html>

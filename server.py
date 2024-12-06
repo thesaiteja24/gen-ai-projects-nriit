@@ -4,6 +4,7 @@ import os
 import certifi
 from UploadFile import upload_to_drive
 from bson.objectid import ObjectId
+import magic
 
 app = Flask(__name__)
 
@@ -12,7 +13,7 @@ app.secret_key = os.environ.get("SESSION_KEY")
 
 # Update MongoDB URI with correct SSL configuration
 app.config["MONGO_URI"] = os.environ.get('MONGO_URI') + certifi.where()
-
+app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
 # Initialize PyMongo
 mongo = PyMongo(app)
 
@@ -98,7 +99,18 @@ def upload_file():
         if not project_name or not project_description:
             flash("Project name and description are required.", "danger")
             return redirect(request.url)
+
         try:
+            # Server-side file type validation using MIME type
+            mime = magic.Magic(mime=True)
+            file_mime_type = mime.from_buffer(file.stream.read(2048))
+            file.stream.seek(0)  # Reset file pointer after reading
+
+            if file_mime_type != "application/pdf":
+                flash(
+                    "Only PDF files are allowed. Please upload a valid file.", "danger")
+                return redirect(request.url)
+
             # Upload the file and get the file URL
             file_url = upload_to_drive(file)
 
@@ -135,7 +147,27 @@ def delete_project(project_id):
         # Convert project_id to ObjectId
         project_id = ObjectId(project_id)
 
-        # Remove the project with the given ID from the user's projects
+        # Find the project to get the file_id
+        user = mongo.db.students.find_one(
+            {"_id": ObjectId(session['user_id'])})
+        project = next((p for p in user.get('projects', [])
+                       if p['_id'] == project_id), None)
+
+        if not project:
+            flash("Project not found or already deleted.", "danger")
+            return redirect(url_for('user_dashboard'))
+
+        # Delete the file from Google Drive
+        file_id = project.get('file_id')
+        if file_id:
+            try:
+                drive_service.files().delete(fileId=file_id).execute()
+                flash("File deleted from Google Drive.", "success")
+            except Exception as e:
+                flash(
+                    f"Failed to delete file from Google Drive: {str(e)}", "danger")
+
+        # Remove the project from the user's projects
         result = mongo.db.students.update_one(
             {"_id": ObjectId(session['user_id'])},
             {"$pull": {"projects": {"_id": project_id}}}
@@ -172,6 +204,12 @@ def flash_message():
     return redirect(request.referrer or url_for('user_dashboard'))
 
 
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    flash("File size exceeds 3MB limit.", "danger")
+    return redirect(request.referrer or url_for('upload_file')), 413
+
+
 @app.route('/')
 def home():
     # Redirect to the login route
@@ -179,4 +217,4 @@ def home():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
