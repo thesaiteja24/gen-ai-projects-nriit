@@ -32,12 +32,13 @@
                 {{ project.project_description }}
               </p>
               <div class="d-flex gap-2">
-                <button
-                  class="btn btn-outline-primary w-100"
-                  onclick="window.location.href='{{ project.link }}'"
+                <a
+                  href="{{ project.link }}"
+                  target="_blank"
+                  class="btn btn-outline-primary flex-grow-1"
                 >
                   View Project
-                </button>
+                </a>
               </div>
             </div>
           </div>

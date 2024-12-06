@@ -137,7 +137,7 @@
         ?.addEventListener("click", (e) => {
           const link = e.target.getAttribute("data-link");
           navigator.clipboard
-            .writeText(link)
+            .writeText("https://genai-nriit.onrender.com" + link)
             .then(() => {
               alert("Link copied to clipboard!");
             })

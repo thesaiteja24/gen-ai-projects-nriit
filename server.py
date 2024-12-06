@@ -6,6 +6,7 @@ from UploadFile import upload_to_drive, delete_from_drive
 from bson.objectid import ObjectId
 import magic
 import bcrypt
+from flask import send_from_directory
 
 app = Flask(__name__)
 
@@ -246,7 +247,12 @@ def flash_message():
     return redirect(request.referrer or url_for('user_dashboard'))
 
 
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 # ------------------------------- Main Entry -------------------------------- #
+
 
 if __name__ == '__main__':
     app.run()
