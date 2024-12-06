@@ -93,8 +93,7 @@ def upload_file():
 
         # Get the project details from the form
         project_name = request.form.get('project_name', '').strip()
-        project_description = request.form.get(
-            'project_description', '').strip()
+        project_description = request.form.get('project_description', '').strip()
 
         if not project_name or not project_description:
             flash("Project name and description are required.", "danger")
@@ -111,8 +110,8 @@ def upload_file():
                     "Only PDF files are allowed. Please upload a valid file.", "danger")
                 return redirect(request.url)
 
-            # Upload the file and get the file URL
-            file_url = upload_to_drive(file)
+            # Upload the file and get the file URL and file ID
+            file_url, file_id = upload_to_drive(file)
 
             # Generate a unique ID for the project
             project_id = ObjectId()
@@ -126,7 +125,8 @@ def upload_file():
                             "_id": project_id,  # Add project ID
                             "project_name": project_name,
                             "project_description": project_description,
-                            "link": file_url
+                            "link": file_url,      # Direct link field
+                            "file_id": file_id     # Direct file_id field
                         }
                     }
                 }
