@@ -1,5 +1,11 @@
-# MongoDB connection string
-MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority&appName=<app-name>&tls=true&tlsCAFile=<path-to-cafile>
+# MongoDB URI for the main database
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/gen-ai-projects?retryWrites=true&w=majority&appName=gen-ai-projects&tls=true&tlsCAFile=
 
-# Flask session secret key
-SESSION_KEY=<your-secret-key>
+# Session key for Flask application
+SESSION_KEY=your-secret-session-key
+
+# Password for application authentication
+PASSWORD=your-password
+
+# Alternate MongoDB URI for uploading data through data_loader
+MONGO_URI_2=mongodb+srv://<username>:<password>@<cluster-url>/gen-ai-projects?retryWrites=true&tlsInsecure=true
