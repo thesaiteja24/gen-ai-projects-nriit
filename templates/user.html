@@ -38,32 +38,42 @@
         class="navbar navbar-expand-lg navbar-light bg-dark rounded shadow-sm p-3"
       >
         <div class="container-fluid">
-          <span id="fullname" class="navbar-brand text-white fs-4">
-            Welcome, {{ fullname }}
-          </span>
-          <div class="d-flex justify-content-between flex-wrap my-2">
-            <a
-              href="{{ url_for('view_user_by_roll', roll_number=session['student_id']) }}"
-              class="btn btn-warning flex-fill m-1"
+          <div
+            class="d-flex flex-column flex-lg-row align-items-center justify-content-between w-100"
+          >
+            <!-- Fullname Section -->
+            <span
+              id="fullname"
+              class="navbar-brand text-white fs-4 fs-md-3 fs-sm-5 text-center text-lg-start mb-2 mb-lg-0"
             >
-              My Projects
-            </a>
-            <button
-              class="btn btn-primary flex-fill m-1"
-              id="copy-link-btn"
-              data-link="{{ url_for('view_user_by_roll', roll_number=session['student_id']) }}"
-            >
-              Copy Link
-            </button>
-            <a href="/upload" class="btn btn-success flex-fill m-1">
-              Add File
-            </a>
-            <i
-              class="fa-solid fa-arrow-right-from-bracket mt-2 mx-3 fs-2 logout-icon"
-              role="button"
-              aria-label="Logout"
-              onclick="handleLogout()"
-            ></i>
+              Welcome, {{ fullname }}
+            </span>
+
+            <!-- Buttons Section -->
+            <div class="d-flex justify-content-between flex-wrap my-2">
+              <a
+                href="{{ url_for('view_user_by_roll', roll_number=session['student_id']) }}"
+                class="btn btn-warning flex-fill m-1"
+              >
+                My Projects
+              </a>
+              <button
+                class="btn btn-primary flex-fill m-1"
+                id="copy-link-btn"
+                data-link="{{ url_for('view_user_by_roll', roll_number=session['student_id']) }}"
+              >
+                Copy Link
+              </button>
+              <a href="/upload" class="btn btn-success flex-fill m-1">
+                Add File
+              </a>
+              <i
+                class="fa-solid fa-arrow-right-from-bracket mt-2 mx-3 fs-2 logout-icon"
+                role="button"
+                aria-label="Logout"
+                onclick="handleLogout()"
+              ></i>
+            </div>
           </div>
         </div>
       </nav>
